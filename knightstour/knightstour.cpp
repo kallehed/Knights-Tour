@@ -9,7 +9,7 @@
 
 // CUSTOM COMPILE-TIME VARIABLES TO SET
 ///////////////////////////////////////////////////////
-constexpr inline int MAX_WIDTH = 200;
+constexpr inline int MAX_WIDTH = 1000;
 constexpr inline int MAX_HEIGHT = 80;
 ///////////////////////////////////////////////////////
 
@@ -165,9 +165,11 @@ int how_many_not_halt(const int width, const int height, const bool draw, const 
 int how_many_went_above(const int width, const int height, const bool draw)
 {
     int nr_went_above = 0;
+    int highest_that_went_above = -1;
     for (int i = top; i >= 0; --i) {
         for (int j = 0; j < width; ++j) {
             if (halts<true>(i, j, width, height, false)) {
+                if (i > highest_that_went_above) { highest_that_went_above = i; }
                 ++nr_went_above;
                 if (draw) std::cout << "|";
             }
@@ -177,6 +179,7 @@ int how_many_went_above(const int width, const int height, const bool draw)
         }
         if (draw) std::cout << '\n';
     }
+    std::cout << "In width " << width << " the highest that went above is: " << highest_that_went_above << '\n';
     return nr_went_above;
 }
 
@@ -209,8 +212,8 @@ int main()
 
     // modifiable code
     {
-        how_many_went_above(MAX_WIDTH, MAX_HEIGHT, true);
-        //test_widths_for_went_above();
+        //how_many_went_above(MAX_WIDTH, MAX_HEIGHT, true);
+        test_widths_for_went_above();
         //test_widths_for_halts();
     }
 
