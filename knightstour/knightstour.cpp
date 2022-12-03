@@ -9,10 +9,12 @@
 
 // CUSTOM COMPILE-TIME VARIABLES TO SET
 ///////////////////////////////////////////////////////
-constexpr inline int MAX_WIDTH = 1000;
-constexpr inline int MAX_HEIGHT = 80;
+constexpr inline int MAX_WIDTH = 100;
+constexpr inline int MAX_HEIGHT = 300;
 ///////////////////////////////////////////////////////
 
+// with order:  25540ms
+// omptiimized  12900ms
 
 // program:
 
@@ -113,7 +115,7 @@ bool halts(const int start_i, const int start_j, const int width, const int heig
                 }
             }
             
-            break;
+            break; // if code reaches this point, no paths were available => therefore, exit loop and return TRUE; it halted
         
         } GOTO_AFTER_MOVE:
 
@@ -138,6 +140,85 @@ bool halts(const int start_i, const int start_j, const int width, const int heig
    
     return return_val;
 }
+
+// order is an array of i and j changes
+bool halts_with_order(const int start_i, const int start_j, const int width, const int height, const bool draw, const std::array<const std::array<const int, 2>, 8> order)
+{
+    bool return_val = true;
+    int i = start_i, j = start_j;
+    while (true)
+    {
+        matrix[i][j] = true;
+
+        if (draw) {
+            draw_blocks(width, height);
+            std::cin.get();
+        }
+        
+        // try moves
+        for (auto move : order) {
+            int i_t = i + move[0], j_t = j + move[1];
+            if (i_t >= 0 && j_t >= 0 && j_t < width && !matrix[i_t][j_t])
+            {
+                // valid move
+                i = i_t;
+                j = j_t;
+                goto GOTO_VALID_MOVE;
+            }
+        }
+
+        // if code arrives here -> it's halted
+        break;
+        
+    GOTO_VALID_MOVE:
+        if (i > top) {
+            return_val = false;
+            break;
+        }
+    }
+
+    for (int i = 0; i < height; ++i) { // clear just the cells that could have been filled
+        for (int j = 0; j < width; ++j) {
+            matrix[i][j] = false;
+        }
+    }
+
+    return return_val;
+}
+
+// in a certain width and height, how many knights halt?
+int how_many_not_halt_order(const int width, const int height, const bool draw, const bool say_pos_of_not_halt)
+{
+    int not_halts = 0;
+
+    // order rotated like 180, always goes to infinity
+    //const std::array<const std::array<const int, 2>, 8> order = { { {-1, -2}, {1, -2}, {-2, -1}, {2, -1}, {-2, 1}, {2, 1}, {-1, 2}, {1, 2} } };
+
+    // normal
+    //const std::array<const std::array<const int, 2>, 8> order = { { {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1} } };
+
+    // circular
+    //const std::array<const std::array<const int, 2>, 8> order = { { {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {2, -1}, {1, -2} } };
+    //const std::array<const std::array<const int, 2>, 8> order = { { {-2, -1} , {-1, -2} , {-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {2, -1}, {1, -2} } };
+    const std::array<const std::array<const int, 2>, 8> order = { { {-2, -1} , {-2, 1}, {-2, 2}, {-1, 2}, {2, -1},{1, 4},{2, -1},{1, -1}  } };
+    for (int i = top; i >= 0; --i) {
+        for (int j = 0; j < width; ++j) {
+            if (halts_with_order(i, j, width, height, false, order)) {
+                if (draw) std::cout << "H ";
+            }
+            else {
+                if (draw) std::cout << "| ";
+                if (say_pos_of_not_halt) {
+                    std::cout << "|x: " << j << "|y: " << i << '\n';
+                }
+                ++not_halts;
+            }
+        }
+        if (draw) std::cout << '\n';
+    }
+    return not_halts;
+}
+
 
 // in a certain width and height, how many knights halt?
 int how_many_not_halt(const int width, const int height, const bool draw, const bool say_pos_of_not_halt) 
@@ -201,6 +282,14 @@ void test_widths_for_went_above()
     }
 }
 
+void test_widths_for_halts_order()
+{
+    for (int width = 1; width <= MAX_WIDTH; ++width) {
+        std::cout << "Width: " << width ;
+        int num = how_many_not_halt_order(width, MAX_HEIGHT, false, true);
+        std::cout << ' ' << num << '\n';
+    }
+}
 
 int main()
 {
@@ -213,8 +302,11 @@ int main()
     // modifiable code
     {
         //how_many_went_above(MAX_WIDTH, MAX_HEIGHT, true);
-        test_widths_for_went_above();
+        //test_widths_for_went_above();
         //test_widths_for_halts();
+        //halts_with_order(2, 2, 3, 50, true, { { {-1, -2}, {1, -2}, {-2, -1}, {2, -1}, {-2, 1}, {2, 1}, {-1, 2}, {1, 2} } });
+        //how_many_not_halt_order(3, MAX_HEIGHT, true, false);
+        test_widths_for_halts_order();
     }
 
     auto duration = duration_cast<milliseconds>(high_resolution_clock::now() - start);
